@@ -1,3 +1,3 @@
 from mechanic.table import Table
 
-table1 = Table()
+table123 = Table()

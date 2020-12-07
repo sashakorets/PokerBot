@@ -1,5 +1,3 @@
 aiogram
 treys
 python-dotenv
-
-# pip install - r

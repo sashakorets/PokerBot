@@ -1,5 +1,4 @@
 from treys import Evaluator, Deck, Card
-from mechanic.database import database
 import pandas
 import numpy as np
 
@@ -214,14 +213,22 @@ class PokerTable:
         print('last hand : ', self.lasthand)
         print("!--!" * 15)
 
-def main():
-    print('/*\\'*20, '1 circle')
-    a = PokerTable(database, 15, 'pl4', 0)
-    a.play()
+# def main():
+#     print('/*\\'*20, '1 circle')
+#     a = PokerTable(database, 15, 'pl4', 0)
+#     a.play()
+#
+#     print('/*\\'*20, '\n2 circle')
+#     b = PokerTable(database, 30.123, 'pl5', 0)
+#     b.play()
 
-    print('/*\\'*20, '\n2 circle')
-    b = PokerTable(database, 30.123, 'pl5', 0)
-    b.play()
+def main():
+    deck = Deck()
+    cards = deck.draw(2)
+    print(cards)
+    print(Card.print_pretty_cards(cards))
+
+
 
 
 if __name__ == main():
