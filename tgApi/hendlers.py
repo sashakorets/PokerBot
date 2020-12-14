@@ -5,10 +5,10 @@ from tgApi.config import dp, bot
 from tgApi.default_key import *
 from tgApi.inline_key import *
 from mechanic.player import Player
-from mechanic.table import Table
 
 class WokrWithHandler:
     __table = None
+
     def __init__(self, tbl):
         WokrWithHandler.__table = tbl
 
@@ -100,7 +100,7 @@ class WokrWithHandler:
                 await bot.send_message(i, f'{table.getBoSt()}', reply_markup=setInLineKey(i, table))
                 await bot.send_message(i, 'Щасливої гри', reply_markup=game)
     
-    @dp.message_handler(Text(equals=["Call","Fold","Bet","Check","All-in","Raise"]))
+    @dp.message_handler(Text(equals=["Call", "Fold", "Bet", "Check", "All-in", "Raise"]))
     async def main_func(message: Message):
         table = WokrWithHandler.getTable()
         if message.text == 'Call':
@@ -124,25 +124,37 @@ class WokrWithHandler:
                     await bot.send_message(i, "check", reply_markup=setInLineKey(i, table))
                     await bot.send_message(i, 'Щасливої гри', reply_markup=game)
         elif message.text == 'All-in':
-            if  table.move(message.from_user.id, 'all-in'):
+            if table.move(message.from_user.id, 'all-in'):
                 for i in table.getPl('id'):
                     await bot.send_message(i, "all-in", reply_markup=setInLineKey(i,table))
                     await bot.send_message(i, 'Щасливої гри', reply_markup=game)
         elif message.text == 'Raise':
-            if  table.move(message.from_user.id, 'raise'):
+            if table.move(message.from_user.id, 'raise'):
                 for i in table.getPl('id'):
                     await bot.send_message(i, "raise", reply_markup=setInLineKey(i, table))
                     await bot.send_message(i, 'Щасливої гри', reply_markup=game)
         else:
             print("error in handler")
     
-    
-        if table.endStep(message.from_user.id):
-            table.refresh()
+        if table.win(message.from_user.id):
+            print('line 140')
+            table.nextcircle()
             for i in table.getPl('id'):
                 await bot.send_message(i, f'{table.getBoSt()}', reply_markup=setInLineKey(i, table))
                 await bot.send_message(i, 'Щасливої гри', reply_markup=game)
-    
+        else:
+            print('line 146')
+            if message.from_user.id == table.getCurrentlyPos().getID():
+                print('line 148')
+                if table.endcircle(message.from_user.id):
+                    table.nextcircle()
+                    for i in table.getPl('id'):
+                        await bot.send_message(i, f'{table.getBoSt()}', reply_markup=setInLineKey(i, table))
+                        await bot.send_message(i, 'Щасливої гри', reply_markup=game)
+                else:
+                    print('line 155')
+                    table.setCurrentlyPos('next')
+
         print(table.getPl('test'))
     
     
@@ -151,10 +163,8 @@ class WokrWithHandler:
         table = WokrWithHandler.getTable()
         if message.from_user.id in table.getPl('id'):
             table.delPl(message.from_user.id)
+            table.checkempty()
         await bot.send_message(message.from_user.id, 'Повертайтесь ще, ми вас чекаємо.', reply_markup=menu)
-
-
-
 
 
 

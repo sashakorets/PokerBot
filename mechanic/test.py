@@ -225,9 +225,14 @@ class PokerTable:
 def main():
     deck = Deck()
     cards = deck.draw(2)
+    board = deck.draw(5)
     print(cards)
     print(Card.print_pretty_cards(cards))
+    print(board)
+    print(Card.print_pretty_cards(board))
 
+    evaluetor = Evaluator()
+    print(evaluetor.evaluate(cards,board))
 
 
 
