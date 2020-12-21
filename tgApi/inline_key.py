@@ -26,73 +26,113 @@ def setInLineKey(tgID, table):
     ]
     count = 1
     for i in table.getPl('id'):
+        fold = table.getPl("full")[count-1].getFold()
         stack = table.getPl("full")[count-1].getStack()
         pot = table.getPl("full")[count-1].getBet()
         hand = table.getPl("full")[count-1].getHand("lca")
         fname = table.getPl("fname")[count-1]
+        status = ''
+        if table.getPl("full")[count-1].getPos():
+            status = '⭐'
         if count == 1:
             if i == tgID:
-                inline_keyboard[0][2] = InlineKeyboardButton(text=f'{pot} {stack} {hand} {fname}', callback_data="test:cards1:1")
+                inline_keyboard[0][2] = InlineKeyboardButton(text=f'{status}{pot} {stack} {hand} {fname}', callback_data="test:cards1:1")
                 count += 1
             else:
-                inline_keyboard[0][2] = InlineKeyboardButton(text=f'{pot} {stack} |__| {fname}', callback_data="test:cards1:1")
-                count += 1
+                if fold:
+                    inline_keyboard[0][2] = InlineKeyboardButton(text=f'{status}{pot} {stack} 🃏🃏 {fname}', callback_data="test:cards1:1")
+                    count += 1
+                else:
+                    inline_keyboard[0][2] = InlineKeyboardButton(text=f'{status}{pot} {stack} |__| {fname}',callback_data="test:cards1:1")
+                    count += 1
         elif count == 2:
             if i == tgID:
-                inline_keyboard[1][2] = InlineKeyboardButton(text=f'{pot} {stack} {hand} {fname}', callback_data="test:cards2:2")
+                inline_keyboard[1][2] = InlineKeyboardButton(text=f'{status}{pot} {stack} {hand} {fname}', callback_data="test:cards2:2")
                 count += 1
             else:
-                inline_keyboard[1][2] = InlineKeyboardButton(text=f'{pot} {stack} |__| {fname}',callback_data="test:cards2:2")
-                count += 1
+                if fold:
+                    inline_keyboard[1][2] = InlineKeyboardButton(text=f'{status}{pot} {stack} 🃏🃏 {fname}',callback_data="test:cards2:2")
+                    count += 1
+                else:
+                    inline_keyboard[1][2] = InlineKeyboardButton(text=f'{status}{pot} {stack} |__| {fname}',callback_data="test:cards1:1")
+                    count += 1
         elif count == 3:
             if i == tgID:
-                inline_keyboard[2][2] = InlineKeyboardButton(text=f'{pot} {stack} {hand} {fname}',callback_data="test:cards3:3")
+                inline_keyboard[2][2] = InlineKeyboardButton(text=f'{status}{pot} {stack} {hand} {fname}',callback_data="test:cards3:3")
                 count += 1
             else:
-                inline_keyboard[2][2] = InlineKeyboardButton(text=f'{pot} {stack} |__| {fname}',callback_data="test:cards3:3")
-                count += 1
+                if fold:
+                    inline_keyboard[2][2] = InlineKeyboardButton(text=f'{status}{pot} {stack} 🃏🃏 {fname}',callback_data="test:cards3:3")
+                    count += 1
+                else:
+                    inline_keyboard[2][2] = InlineKeyboardButton(text=f'{status}{pot} {stack} |__| {fname}',callback_data="test:cards1:1")
+                    count += 1
         elif count == 4:
             if i == tgID:
-                inline_keyboard[3][2] = InlineKeyboardButton(text=f'{pot} {stack} {hand} {fname}',callback_data="test:cards4:4")
+                inline_keyboard[3][2] = InlineKeyboardButton(text=f'{status}{pot} {stack} {hand} {fname}',callback_data="test:cards4:4")
                 count += 1
             else:
-                inline_keyboard[3][2] = InlineKeyboardButton(text=f'{pot} {stack} |__| {fname}',callback_data="test:cards4:4")
-                count += 1
+                if fold:
+                    inline_keyboard[3][2] = InlineKeyboardButton(text=f'{status}{pot} {stack} 🃏🃏 {fname}',callback_data="test:cards4:4")
+                    count += 1
+                else:
+                    inline_keyboard[3][2] = InlineKeyboardButton(text=f'{status}{pot} {stack} |__| {fname}',callback_data="test:cards1:1")
+                    count += 1
         elif count == 5:
             if i == tgID:
-                inline_keyboard[3][1] = InlineKeyboardButton(text=f'{pot} {stack} {hand} {fname}',callback_data="test:cards5:5")
+                inline_keyboard[3][1] = InlineKeyboardButton(text=f'{status}{pot} {stack} {hand} {fname}',callback_data="test:cards5:5")
                 count += 1
             else:
-                inline_keyboard[3][1] = InlineKeyboardButton(text=f'{pot} {stack} |__| {fname}', callback_data="test:cards5:5")
-                count += 1
+                if fold:
+                    inline_keyboard[3][1] = InlineKeyboardButton(text=f'{status}{pot} {stack} 🃏🃏 {fname}', callback_data="test:cards5:5")
+                    count += 1
+                else:
+                    inline_keyboard[3][1] = InlineKeyboardButton(text=f'{status}{pot} {stack} |__| {fname}',callback_data="test:cards1:1")
+                    count += 1
         elif count == 6:
             if i == tgID:
-                inline_keyboard[3][0] = InlineKeyboardButton(text=f'{pot} {stack} {hand} {fname}',callback_data="test:cards6:6")
+                inline_keyboard[3][0] = InlineKeyboardButton(text=f'{status}{pot} {stack} {hand} {fname}',callback_data="test:cards6:6")
                 count += 1
             else:
-                inline_keyboard[3][0] = InlineKeyboardButton(text=f'{pot} {stack} |__| {fname}',callback_data="test:cards6:6")
-                count += 1
+                if fold:
+                    inline_keyboard[3][0] = InlineKeyboardButton(text=f'{status}{pot} {stack} 🃏🃏 {fname}',callback_data="test:cards6:6")
+                    count += 1
+                else:
+                    inline_keyboard[3][0] = InlineKeyboardButton(text=f'{status}{pot} {stack} |__| {fname}',callback_data="test:cards1:1")
+                    count += 1
         elif count == 7:
             if i == tgID:
-                inline_keyboard[2][0] = InlineKeyboardButton(text=f'{pot} {stack} {hand} {fname}',callback_data="test:cards7:7")
+                inline_keyboard[2][0] = InlineKeyboardButton(text=f'{status}{pot} {stack} {hand} {fname}',callback_data="test:cards7:7")
                 count += 1
             else:
-                inline_keyboard[2][0] = InlineKeyboardButton(text=f'{pot} {stack} |__| {fname}',callback_data="test:cards7:7")
-                count += 1
+                if fold:
+                    inline_keyboard[2][0] = InlineKeyboardButton(text=f'{status}{pot} {stack} 🃏🃏 {fname}',callback_data="test:cards7:7")
+                    count += 1
+                else:
+                    inline_keyboard[2][0] = InlineKeyboardButton(text=f'{status}{pot} {stack} |__| {fname}',callback_data="test:cards1:1")
+                    count += 1
         elif count == 8:
             if i == tgID:
-                inline_keyboard[1][0] = InlineKeyboardButton(text=f'{pot} {stack} {hand} {fname}',callback_data="test:cards8:8")
+                inline_keyboard[1][0] = InlineKeyboardButton(text=f'{status}{pot} {stack} {hand} {fname}',callback_data="test:cards8:8")
                 count += 1
             else:
-                inline_keyboard[1][0] = InlineKeyboardButton(text=f'{pot} {stack} |__| {fname}',callback_data="test:cards8:8")
-                count += 1
+                if fold:
+                    inline_keyboard[1][0] = InlineKeyboardButton(text=f'{status}{pot} {stack} 🃏🃏 {fname}',callback_data="test:cards8:8")
+                    count += 1
+                else:
+                    inline_keyboard[1][0] = InlineKeyboardButton(text=f'{status}{pot} {stack} |__| {fname}',callback_data="test:cards1:1")
+                    count += 1
         elif count == 9:
             if i == tgID:
-                inline_keyboard[0][0] = InlineKeyboardButton(text=f'{pot} {stack} {hand} {fname}', callback_data="test:cards9:9")
+                inline_keyboard[0][0] = InlineKeyboardButton(text=f'{status}{pot} {stack} {hand} {fname}', callback_data="test:cards9:9")
                 count += 1
             else:
-                inline_keyboard[0][0] = InlineKeyboardButton(text=f'{pot} {stack} |__| {fname}', callback_data="test:cards9:9")
-                count += 1
+                if fold:
+                    inline_keyboard[0][0] = InlineKeyboardButton(text=f'{status}{pot} {stack} 🃏🃏 {fname}', callback_data="test:cards9:9")
+                    count += 1
+                else:
+                    inline_keyboard[0][0] = InlineKeyboardButton(text=f'{status}{pot} {stack} |__| {fname}',callback_data="test:cards1:1")
+                    count += 1
         else:
             print("error in inline_key")
 

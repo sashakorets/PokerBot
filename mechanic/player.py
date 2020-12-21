@@ -48,7 +48,10 @@ class Player:
     def getHand(self, var: str):
         if var == 'lca':
             if not isinstance(self.__hand.getCard(), str):
-                return Card.print_pretty_cards(self.__hand.getCard())
+                if self.__hand.getCard():
+                    return Card.print_pretty_cards(self.__hand.getCard())
+                else:
+                    return '|__|'
         elif var == 'lin':
             return self.__hand.getCard()
         else:

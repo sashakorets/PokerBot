@@ -5,12 +5,33 @@ from tgApi.config import dp, bot
 from tgApi.default_key import *
 from tgApi.inline_key import *
 from mechanic.player import Player
+from DB.singletonDB import Database
 
 class WokrWithHandler:
     __table = None
 
     def __init__(self, tbl):
         WokrWithHandler.__table = tbl
+
+    @staticmethod
+    async def OutPutInfo(mes):
+        rpmrkp = None
+        table = WokrWithHandler.getTable()
+        for el in table.getPl('full'):
+            if isinstance(el, Player):
+                id = el.getID()
+                plHand = el.getHand('lca')
+                plStack = el.getStack()
+                plBet = el.getBet()
+                if not el.getFold():
+                    rpmrkp = loseKey
+                else:
+                    if table.getcall() == 0: # choose between default_key.checkbet and default_key.callraise
+                        rpmrkp = checkbet
+                    else:
+                        rpmrkp = callraise
+                await bot.send_message(id, f'{mes}', reply_markup=setInLineKey(id, table))
+                await bot.send_message(id, f'Ur cards: {plHand}\nUr stack: {plStack}\nUr Bet: {plBet}', reply_markup=rpmrkp)
 
     @staticmethod
     def getTable():
@@ -22,7 +43,7 @@ class WokrWithHandler:
 
     @dp.message_handler(commands=['menu'])
     async def show_menu(message: types.Message):
-        await bot.send_message(message.from_user.id, 'Відкриваю меню ✔', reply_markup=menu)
+        await bot.send_message(message.from_user.id, 'hola, Відкрито меню ✔', reply_markup=menu)
     
     @dp.message_handler(Text(equals=["Правила","Читати далі(1/6)","Читати далі(2/6)",
                                      "Читати далі(3/6)","Читати далі(4/6)","Читати далі(5/6)",
@@ -58,23 +79,33 @@ class WokrWithHandler:
                     1. ♥️A ♠️A — Пара: любые две карты одного ранга.\n
                     0. ♥️A — Старшая карта: любая рука, из которой невозможно сложить указанные выше комбинации в покере.''')
     
-    @dp.message_handler(Text(equals=["Баланс"]))
+    @dp.message_handler(Text(equals=["Рекорди"]))
     async def balance_func(message: Message):
-        await bot.send_message(message.from_user.id, "Бот знаходиться в тестовому режимі, тому кожному гравцеві будуть видаватись 1000 фішок, коли він сідає за стіл, попередні будуть анульовані.\nДякуємо за розуміння!!!")
+        var = Database.getRows()
+        await bot.send_message(message.from_user.id, f'{var[0]}\n{var[1]}\n{var[2]}\n{var[3]}\n{var[4]}\n')
     
     
     @dp.message_handler(Text(equals=["Сісти за стіл"]))
     async def main_func(message: Message):
         table = WokrWithHandler.getTable()
-        if len(table.getPl('id')) != 9:
-            if not (message.from_user.id in table.getPl('id')):
+        if len(table.getPl('id')) < 9:
+            if not (message.from_user.id in table.getPl('id')) and not table.getStart():
                 table.addPl(message.from_user.id, message.from_user.first_name)
                 for i in table.getPl('id'):
                     await bot.send_message(i, "new player in table)!", reply_markup=setInLineKey(i,table))
                     await bot.send_message(i, "щасливої гри", reply_markup=playKeyPos)
+
+            elif not (message.from_user.id in table.getPl('id')) and table.getStart():
+                table.addPl(message.from_user.id, message.from_user.first_name)
+                await WokrWithHandler.OutPutInfo("new player in table)!")
             else:
-                await bot.send_message(message.from_user.id, "new player in table)!", reply_markup=setInLineKey(message.from_user.id, table))
-                await bot.send_message(message.from_user.id, "щасливої гри", reply_markup=game)
+                if table.getcall() == 0:
+                    await bot.send_message(message.from_user.id, "new player in table)!", reply_markup=setInLineKey(message.from_user.id, table))
+                    await bot.send_message(message.from_user.id, "щасливої гри", reply_markup=checkbet)
+                else:
+                    await bot.send_message(message.from_user.id, "new player in table)!", reply_markup=setInLineKey(message.from_user.id, table))
+                    await bot.send_message(message.from_user.id, "щасливої гри", reply_markup=callraise)
+
             print(table.getPl('test'))
         else:
             await bot.send_message(message.from_user.id, "Вибачте, сталася помилка", reply_markup=menu)
@@ -82,6 +113,7 @@ class WokrWithHandler:
     @dp.message_handler(Text(equals=["Грати","Зупинити"]))
     async def main_func(message: Message):
         table = WokrWithHandler.getTable()
+        print(table.getStart())
         for el in table.getPl('full'):
             if isinstance(el, Player):
                 if el.getID() == message.from_user.id:
@@ -96,61 +128,51 @@ class WokrWithHandler:
         print(table.getPl('test'))
     
         if table.goplay():
-            for i in table.getPl('id'):
-                await bot.send_message(i, f'{table.getBoSt()}', reply_markup=setInLineKey(i, table))
-                await bot.send_message(i, 'Щасливої гри', reply_markup=game)
-    
+            await WokrWithHandler.OutPutInfo("new player in table)!")
+
     @dp.message_handler(Text(equals=["Call", "Fold", "Bet", "Check", "All-in", "Raise"]))
     async def main_func(message: Message):
         table = WokrWithHandler.getTable()
+        if len(list(filter(lambda x: isinstance(x, Player), table.getPl('full')))) == 0:
+            await bot.send_message(message.from_user.id, 'Відкрито меню ✔', reply_markup=menu)
+            return
+        else:
+            if not message.from_user.id in table.getPl('id'):
+                await bot.send_message(message.from_user.id, 'Відкрито меню ✔', reply_markup=menu)
+                return
+
         if message.text == 'Call':
             if table.move(message.from_user.id, 'call'):
-                for i in table.getPl('id'):
-                    await bot.send_message(i, "call", reply_markup=setInLineKey(i,table))
-                    await bot.send_message(i, 'Щасливої гри', reply_markup=game)
+                await WokrWithHandler.OutPutInfo(f'call from {message.from_user.first_name}')
         elif message.text == 'Fold':
             if table.move(message.from_user.id, 'fold'):
-                for i in table.getPl('id'):
-                    await bot.send_message(i, "fold", reply_markup=setInLineKey(i, table))
-                    await bot.send_message(i, 'Щасливої гри', reply_markup=game)
+                await WokrWithHandler.OutPutInfo(f'fold from {message.from_user.first_name}')
         elif message.text == 'Bet':
             if table.move(message.from_user.id, 'bet'):
-                for i in table.getPl('id'):
-                    await bot.send_message(i, "bet", reply_markup=setInLineKey(i, table))
-                    await bot.send_message(i, 'Щасливої гри', reply_markup=game)
+                await WokrWithHandler.OutPutInfo(f'bet from {message.from_user.first_name}')
         elif message.text == 'Check':
             if table.move(message.from_user.id, 'check'):
-                for i in table.getPl('id'):
-                    await bot.send_message(i, "check", reply_markup=setInLineKey(i, table))
-                    await bot.send_message(i, 'Щасливої гри', reply_markup=game)
+                await WokrWithHandler.OutPutInfo(f'check from {message.from_user.first_name}')
         elif message.text == 'All-in':
             if table.move(message.from_user.id, 'all-in'):
-                for i in table.getPl('id'):
-                    await bot.send_message(i, "all-in", reply_markup=setInLineKey(i,table))
-                    await bot.send_message(i, 'Щасливої гри', reply_markup=game)
+                await WokrWithHandler.OutPutInfo(f'all-in from {message.from_user.first_name}')
         elif message.text == 'Raise':
             if table.move(message.from_user.id, 'raise'):
-                for i in table.getPl('id'):
-                    await bot.send_message(i, "raise", reply_markup=setInLineKey(i, table))
-                    await bot.send_message(i, 'Щасливої гри', reply_markup=game)
+                await WokrWithHandler.OutPutInfo(f'raise from {message.from_user.first_name}')
         else:
             print("error in handler")
     
         if table.win(message.from_user.id):
-            print('line 140')
+            print('line 184')
             table.nextcircle()
-            for i in table.getPl('id'):
-                await bot.send_message(i, f'{table.getBoSt()}', reply_markup=setInLineKey(i, table))
-                await bot.send_message(i, 'Щасливої гри', reply_markup=game)
+            await WokrWithHandler.OutPutInfo(f'{table.getBoSt()}')
         else:
-            print('line 146')
+            print('line 190')
             if message.from_user.id == table.getCurrentlyPos().getID():
-                print('line 148')
+                print('line 192')
                 if table.endcircle(message.from_user.id):
                     table.nextcircle()
-                    for i in table.getPl('id'):
-                        await bot.send_message(i, f'{table.getBoSt()}', reply_markup=setInLineKey(i, table))
-                        await bot.send_message(i, 'Щасливої гри', reply_markup=game)
+                    await WokrWithHandler.OutPutInfo(f'{table.getBoSt()}')
                 else:
                     print('line 155')
                     table.setCurrentlyPos('next')
@@ -162,11 +184,28 @@ class WokrWithHandler:
     async def main_func(message: Message):
         table = WokrWithHandler.getTable()
         if message.from_user.id in table.getPl('id'):
+            for el in table.getPl('full'):
+                if isinstance(el, Player):
+                    if el.getID() == message.from_user.id:
+                        Database.setRows(message.from_user.id, el.getStack())
             table.delPl(message.from_user.id)
-            table.checkempty()
         await bot.send_message(message.from_user.id, 'Повертайтесь ще, ми вас чекаємо.', reply_markup=menu)
 
+        if table.checkempty():
+            for el in table.getPl('full'):
+                if isinstance(el, Player):
+                    await bot.send_message(el.getID(), 'Повертайтесь ще, ми вас чекаємо.', reply_markup=menu)
+                    for el in table.getPl('full'):
+                        if isinstance(el, Player):
+                            if el.getID() == message.from_user.id:
+                                Database.setRows(message.from_user.id, el.getStack())
+                    table.delPl(el.getID())
 
+    @dp.message_handler(commands=['start'])
+    async def show_menu(message: types.Message):
+        Database.add_posts((message.from_user.id, message.from_user.first_name, 0))
+        await message.answer(f'hello, use command /menu')
 
-
-
+    @dp.message_handler(commands=['help'])
+    async def show_menu(message: types.Message):
+        await message.answer(f'hi, use command /menu')

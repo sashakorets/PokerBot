@@ -3,19 +3,17 @@ from mechanic.player import Player
 from mechanic.cards.board import Board
 from mechanic.gameRound import gameRound
 from mechanic.moveTable import moveTable
-import time
 
-#kostil
 evaluetor = Evaluator()
 
 class Table(moveTable, gameRound):
-    def __init__(self, blind=15):
+    def __init__(self, blind=10):
         self.__players = [x for x in range(9)]
         self.__deck = Deck()
         self.__board = Board()
-        #self.__start = False
+        self.__start = False
         self.__blind = blind
-        self.__call = 12
+        self.__call = 0 # impact line
         self.__pot = 0
         self.__currentlyPos = None
         self.__circlestatus = 'river'  # preflop,flop,tern,river
@@ -24,7 +22,7 @@ class Table(moveTable, gameRound):
         currpos = ID
 
         print('line 40 in table.py.win')
-        temp = 0
+        temp = 10000000
         res = None
         if self.checkallfold():
             for el in self.__players:
@@ -43,7 +41,7 @@ class Table(moveTable, gameRound):
                     for el in self.__players:
                         if isinstance(el, Player):
                             if el.getFold():
-                                if temp < evaluetor.evaluate(el.getHand('lin'), self.getBoard('river', 'lin')):
+                                if temp > evaluetor.evaluate(el.getHand('lin'), self.getBoard('river', 'lin')):
                                     temp = evaluetor.evaluate(el.getHand('lin'), self.getBoard('river', 'lin'))
                                     print('we know winner')
                                     res = el
@@ -60,26 +58,31 @@ class Table(moveTable, gameRound):
     def nextcircle(self):
         # maybe add same other func
         if self.__circlestatus == 'river':
+            self.__call = 0
             self.setPot(True)
             self.__deck = Deck()
             self.setAllFolds()
             self.setAllBets()
             self.setPos()
-            self.setCurrentlyPos('fromstaticpos')
             self.setBoard()
             self.setHand(True)
+            self.setCurrentlyPos('fromstaticpos')
+            self.payBlind()
             self.__circlestatus = 'preflop'
         elif self.__circlestatus == 'preflop':
+            self.__call = 0
             self.setPot()
             self.setAllBets()
             self.setCurrentlyPos('fromstaticpos')
             self.__circlestatus = 'flop'
         elif self.__circlestatus == 'flop':
+            self.__call = 0
             self.setPot()
             self.setAllBets()
             self.setCurrentlyPos('fromstaticpos')
             self.__circlestatus = 'turn'
         elif self.__circlestatus == 'turn':
+            self.__call = 0
             self.setPot()
             self.setAllBets()
             self.setCurrentlyPos('fromstaticpos')
@@ -145,10 +148,12 @@ class Table(moveTable, gameRound):
             return self.__players
 
     def checkempty(self):
-        if len(list(filter(lambda x : isinstance(x, Player), self.__players))) >= 1:
+        if len(list(filter(lambda x: isinstance(x, Player), self.__players))) <= 1:
+            self.setStart(False)
             self.__currentlyPos = None
             self.__circlestatus = 'river'
-            self.__board = None
+            self.__board = Board()
+            return True
 
     def setPot(self, clean = False):
         if not clean:
@@ -187,6 +192,18 @@ class Table(moveTable, gameRound):
                     if isinstance(el, Player):
                         el.setPos(True)
                         return
+
+    def getcall(self):
+        return self.__call
+
+    def getStart(self):
+        return self.__start
+
+    def setStart(self, flag=False):
+        if flag:
+            self.__start = True
+        else:
+            self.__start = False
 
     def getPos(self):
         # повертає порядковий номер за столом, гравця що повинен ходити
@@ -234,8 +251,8 @@ class Table(moveTable, gameRound):
     # board
     def setBoard(self):
         self.__board.setCard(self.__deck, True)
-    # board
 
+    # board
     def getBoard(self, flag: str, var: str):
         if var == 'lca':
             if not isinstance(self.__board.getCard(flag), str):
@@ -258,24 +275,25 @@ class Table(moveTable, gameRound):
                 if flag == 'fromstaticpos':
                     if el.getPos() and temp == 0:
                         temp = 1
-                    elif temp == 1:
+                    elif temp == 1 and el.getFold():
                         self.__currentlyPos = el
                         return
                 elif flag == 'next':
                     if temp == 0 and el.getID() == self.__currentlyPos.getID():
                         temp = 1
-                    elif temp == 1:
+                    elif temp == 1 and el.getFold():
                         self.__currentlyPos = el
                         return
                 else:
-                    print("set currently pos error, in class.table.method")
+                    print("set currently pos error, in class.table.setCurrentlyPos")
                     return
         else:
             if temp == 1:
                 for i in self.__players:
                     if isinstance(i, Player):
-                        self.__currentlyPos = i
-                        return
+                        if i.getFold():
+                            self.__currentlyPos = i
+                            return
 
     # реалізуєма gameRound
     def move(self, tgID, action):
@@ -284,16 +302,28 @@ class Table(moveTable, gameRound):
         if tgID == el.getID():
             if action == 'call':
                 print(el.getID(), 'call')
-                el.setStack(el.getBet() - self.__call)
-                el.setBet(self.__call - el.getBet())
+                if self.__call - el.getBet() < el.getStack():
+                    el.setStack(el.getBet() - self.__call)
+                    el.setBet(self.__call - el.getBet())
+                else:
+                    el.setBet(el.getStack())
+                    el.setStack((-1)*el.getStack())
+
             elif action == 'fold':
                 print(el.getID(), 'fold')
                 el.setFold(False)
             elif action == 'bet':
                 print(el.getID(), 'bet')
-                el.setStack((-2) * self.__call)
-                el.setBet(2*self.__call)
-                self.__call *= 2
+                if self.__call - el.getBet() < el.getStack():
+                    el.setStack((-1/2) * self.__pot)
+                    el.setBet(1/2*self.__pot)
+                    self.__call = el.getBet()
+                else:
+                    el.setBet(el.getStack())
+                    el.setStack((-1)*el.getStack())
+                    if self.__call < el.getBet():
+                        self.__call = el.getBet()
+                    #######print('class.table.move.bet !!! line 321')
             elif action == 'check':
                 print(el.getID(), 'check')
                 if self.__call == 0:
@@ -303,14 +333,22 @@ class Table(moveTable, gameRound):
             elif action == 'all-in':
                 print(el.getID(), 'all-in')
                 el.setBet(el.getStack())
-                self.__call = el.getStack()
+                if self.__call < el.getStack():
+                    self.__call = el.getStack()
                 el.setStack((-1) * el.getStack())
             elif action == 'raise':
                 print(el.getID(), 'raise')
-                print("*raise* error!!!")
+                if 2*self.__call - el.getBet() < el.getStack():
+                    el.setStack((-1)*(2*self.__call - el.getBet()))
+                    el.setBet(2*self.__call - el.getBet())
+                    self.__call = el.getBet()
+                else:
+                    el.setBet(el.getStack())
+                    el.setStack((-1)*el.getStack())
+                    if self.__call < el.getBet():
+                        self.__call = el.getBet()
             else:
                 print('good')
-            #self.setCurrentlyPos('next')
             return True
         else:
             return False
@@ -330,6 +368,7 @@ class Table(moveTable, gameRound):
                     return False
         else:
             if len(list(filter(lambda x: isinstance(x, Player), self.__players))) >= 2:
+                self.setStart(True)
                 self.nextcircle()
                 return True
             else:
@@ -338,7 +377,7 @@ class Table(moveTable, gameRound):
     # реалізуєм moveTable
     def payBlind(self):
         flag = 0
-        for x in 'qw':    # to do this 2 time
+        for x in '12':    # to do this 2 time
             for i in range(len(self.__players)):
                 if isinstance(self.__players[i], Player):
                     if flag == 0:
@@ -354,5 +393,5 @@ class Table(moveTable, gameRound):
                         self.__call = self.__blind * 2
                         self.setCurrentlyPos('next')
                         self.setCurrentlyPos('next')
-                        self.setCurrentlyPos('next')
+                        self.__call = 2 * self.__blind
                         return

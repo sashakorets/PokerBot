@@ -1,4 +1,4 @@
-import sqlite3
+from sqlite3 import Error, connect
 
 class MetaSingleton(type):
     _instances = {}
@@ -14,57 +14,80 @@ class Database(metaclass=MetaSingleton):
 
     def connect(self):
         if self.connection is None:
-            self.connection = sqlite3.connect("dbrecords")
+            self.connection = connect('/home/pepper/PycharmProjects/PokerBotTeleg/DB/dbrecords')
         return self.connection
 
-    def get_posts(db):
-        with db:
-            db.cursor().execute("SELECT * FROM records")
-            print(db.cursor().fetchall())
+    @staticmethod
+    def add_posts(args):
+        try:
+            connection = connect('/home/pepper/PycharmProjects/PokerBotTeleg/DB/dbrecords')
+            cursor = connection.cursor()
 
-    def set_posts(db, args):
-        with db:
-            db.cursor().execute(f"INSERT INTO records VALUES {args}")
-            db.commit()
+            sqlite_select_query = f"""SELECT * FROM records WHERE ID = {args[0]}"""
+            cursor.execute(sqlite_select_query)
+            records = cursor.fetchall()
+            if records:
+                return
+            else:
+                cursor.execute(f"INSERT INTO records VALUES {args}")
+            connection.commit()
 
+        except Exception as er:
+            print("Failed in ADD method\n", er)
+        finally:
+            if (connection):
+                connection.close()
 
-db1 = Database().connect()
-# db1.cursor().execute("""CREATE TABLE records
-#               (id text, fname text, stack int)
-#           """)
+    @staticmethod
+    def setRows(tgID, stck: int):
+        try:
+            connection = connect('/home/pepper/PycharmProjects/PokerBotTeleg/DB/dbrecords')
 
-Database.set_posts(db1,('1231_id','f mane123',123))
-Database.set_posts(db1,('1231_id','f mane123',13123))
-Database.set_posts(db1,('1231_id','f mane123',23))
+            cursor = connection.cursor()
+            sqlite_select_query = f"""SELECT Stack FROM records WHERE ID = {tgID}"""
+            cursor.execute(sqlite_select_query)
+            records = cursor.fetchall()
+            if records[0][0] < stck:
+                connection.execute(f'UPDATE records SET Stack = {stck} WHERE ID = {tgID}')
+                connection.commit()
+        except Exception as er:
+            print("Failed in SET method\n", er)
+        finally:
+            if (connection):
+                connection.close()
 
-Database.get_posts(db1)
+    @staticmethod
+    def getRows():
+        try:
+            connection = connect('/home/pepper/PycharmProjects/PokerBotTeleg/DB/dbrecords')
+            cursor = connection.cursor()
 
+            sqlite_select_query = """SELECT NAME, STACK FROM records ORDER BY STACK DESC LIMIT 5"""
+            cursor.execute(sqlite_select_query)
+            records = cursor.fetchall()
+            #all records, a[0] = id, a[1] = name, a[2] = stack
+            cursor.close()
+        except Exception as er:
+            print("Failed in GET method\n", er)
+        finally:
+            if (connection):
+                connection.close()
+        return records
 
+# create table *records*
+# conn = connect('dbrecords')
+# conn.execute('''CREATE TABLE records
+#          (ID            INT      NOT NULL,
+#          NAME           TEXT    NOT NULL,
+#          STACK          INT );''')
 
-def getAllRows():
-    try:
-        connection = sqlite3.connect('dbrecords')
-        cursor = connection.cursor()
-        print("Connected to SQLite")
+# add test data
+# Database.add_posts((4, 'name4test', 1234))
+# Database.add_posts((2, 'name2test', 12))
+# Database.add_posts((3, 'name3test', 123))
 
-        sqlite_select_query = """SELECT * from records"""
-        cursor.execute(sqlite_select_query)
-        records = cursor.fetchall()
-        print("Total rows are:  ", len(records))
-        print("Printing each row")
-        for row in records:
-            print("Id: ", row[0])
-            print("Name: ", row[1])
-            print("Email: ", row[2])
-            print("\n")
+# example to outPutInfo
+# print(Database.getRows())
 
-        cursor.close()
-
-    except sqlite3.Error as error:
-        print("Failed to read data from table", error)
-    finally:
-        if (connection):
-            connection.close()
-            print("The Sqlite connection is closed")
-
-getAllRows()
+# show all DB
+# for i in connect('/home/pepper/PycharmProjects/PokerBotTeleg/DB/dbrecords').cursor().execute("""SELECT NAME, STACK FROM records ORDER BY STACK DESC""").fetchall():print(i)

@@ -223,16 +223,29 @@ class PokerTable:
 #     b.play()
 
 def main():
+    evaluetor = Evaluator()
     deck = Deck()
     cards = deck.draw(2)
     board = deck.draw(5)
     print(cards)
     print(Card.print_pretty_cards(cards))
+    print(evaluetor.evaluate(cards, board))
+    print(evaluetor.get_rank_class(evaluetor.evaluate(cards,board)))
+    cards = deck.draw(2)
+    print(cards)
+    print(Card.print_pretty_cards(cards))
+    print(evaluetor.evaluate(cards, board))
+    print(evaluetor.get_rank_class(evaluetor.evaluate(cards,board)))
+    cards = deck.draw(2)
+    print(cards)
+    print(Card.print_pretty_cards(cards))
+    print(evaluetor.evaluate(cards, board))
+
     print(board)
     print(Card.print_pretty_cards(board))
 
-    evaluetor = Evaluator()
-    print(evaluetor.evaluate(cards,board))
+
+    print(evaluetor.get_rank_class(evaluetor.evaluate(cards,board)))
 
 
 

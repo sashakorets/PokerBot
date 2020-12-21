@@ -7,28 +7,13 @@ menu = ReplyKeyboardMarkup(keyboard=[
     ],
     [
         KeyboardButton(text="Комбінації"),
-        KeyboardButton(text="Баланс"),
+        KeyboardButton(text="Рекорди"),
 
     ],
 ], resize_keyboard=True)
 
-game = ReplyKeyboardMarkup(keyboard=[
-    [
-        KeyboardButton(text="Call"),
-        KeyboardButton(text="Fold"),
-        KeyboardButton(text="Bet"),
-    ],
-    [
-        KeyboardButton(text="Chek"),
-        KeyboardButton(text="All-in"),
-        KeyboardButton(text="Raise"),
 
-    ],
-    [
-        KeyboardButton(text="Вийти"),
 
-    ],
-], resize_keyboard=True)
 
 startrule = ReplyKeyboardMarkup(keyboard=[
     [
@@ -82,6 +67,10 @@ rule6 = ReplyKeyboardMarkup(keyboard=[
 
 ], resize_keyboard=True)
 
+
+
+
+
 playKeyPos = ReplyKeyboardMarkup(keyboard=[
     [
         KeyboardButton(text="Грати"),
@@ -98,5 +87,41 @@ playKeyNeg = ReplyKeyboardMarkup(keyboard=[
     [
         KeyboardButton(text="Вийти"),
 
+    ],
+], resize_keyboard=True)
+
+
+
+
+checkbet = ReplyKeyboardMarkup(keyboard=[
+    [
+        KeyboardButton(text="Check"),
+        KeyboardButton(text="Bet"),
+    ],
+    [
+        KeyboardButton(text="Fold"),
+    ],
+    [
+        KeyboardButton(text="Вийти"),
+    ],
+], resize_keyboard=True)
+
+callraise = ReplyKeyboardMarkup(keyboard=[
+    [
+        KeyboardButton(text="Call"),
+        KeyboardButton(text="Raise"),
+    ],
+    [
+        KeyboardButton(text="All-in"),
+        KeyboardButton(text="Fold"),
+    ],
+    [
+        KeyboardButton(text="Вийти"),
+    ],
+], resize_keyboard=True)
+
+loseKey = ReplyKeyboardMarkup(keyboard=[
+    [
+        KeyboardButton(text="Вийти"),
     ],
 ], resize_keyboard=True)
